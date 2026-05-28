@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presens — Trabaja acompañado. En silencio.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c1810;
+    --bg2:       #121f16;
+    --bg3:       #172619;
+    --card:      #1a2e1e;
+    --border:    #1e3322;
+    --border2:   #253d28;
+    --green:     #4aa064;
+    --green-lt:  #6dbf85;
+    --green-dim: #2d6040;
+    --text:      #e2f0e6;
+    --text-md:   #9bbfa5;
+    --text-dim:  #4d7a5e;
+    --serif:     'DM Serif Display', Georgia, serif;
+    --sans:      'DM Sans', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* subtle radial glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -30vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 80vw;
+    background: radial-gradient(ellipse, rgba(74,160,100,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    background: rgba(12,24,16,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(30,51,34,0.6);
+  }
+
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-style: italic;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .nav-lang {
+    display: flex;
+    gap: 6px;
+  }
+
+  .lang-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 5px 14px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .lang-btn.active {
+    border-color: var(--green-dim);
+    color: var(--green-lt);
+    background: rgba(74,160,100,0.06);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 1.5rem 5rem;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(74,160,100,0.08);
+    border: 1px solid rgba(74,160,100,0.2);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green-lt);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.1s;
+  }
+
+  .pulse-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 8vw, 5.5rem);
+    font-style: italic;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    max-width: 780px;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.25s;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--green-lt);
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--text-md);
+    max-width: 480px;
+    line-height: 1.65;
+    margin-bottom: 2.8rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.4s;
+  }
+
+  /* waitlist form */
+  .waitlist-form {
+    display: flex;
+    gap: 10px;
+    max-width: 440px;
+    width: 100%;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.55s;
+  }
+
+  .waitlist-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .waitlist-input::placeholder { color: var(--text-dim); }
+  .waitlist-input:focus { border-color: var(--green-dim); }
+
+  .waitlist-btn {
+    background: var(--green);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: #0c1810;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .waitlist-btn:hover { background: var(--green-lt); }
+  .waitlist-btn:active { transform: scale(0.97); }
+
+  .hero-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 1rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.7s;
+  }
+
+  .counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(74,160,100,0.06);
+    border: 1px solid rgba(74,160,100,0.15);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text-md);
+    margin-top: 1.6rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.85s;
+  }
+
+  .counter strong { color: var(--green-lt); }
+
+  /* phone mockup strip */
+  .mockup-strip {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 0 1rem 5rem;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .phone-frame {
+    background: #0f1a14;
+    border-radius: 28px;
+    border: 1px solid #1e2e24;
+    padding: 20px 16px 24px;
+    width: 200px;
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .phone-frame.visible { opacity: 1; transform: translateY(0); }
+  .phone-frame:nth-child(2) { transition-delay: 0.15s; }
+  .phone-frame:nth-child(3) { transition-delay: 0.3s; }
+
+  .phone-frame::before {
+    content: '';
+    display: block;
+    width: 40px; height: 3px;
+    background: #1e2e24;
+    border-radius: 99px;
+    margin: 0 auto 16px;
+  }
+
+  .pf-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .pf-title {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-style: italic;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+
+  .pf-card {
+    background: #162a1e;
+    border: 1px solid #1e3528;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+
+  .pf-card-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+  .pf-card-val { font-size: 13px; color: var(--text-md); font-weight: 500; }
+
+  .pf-dur-row { display: flex; gap: 5px; margin-bottom: 8px; }
+  .pf-dur {
+    flex: 1; text-align: center;
+    font-size: 11px; padding: 6px 0;
+    border-radius: 7px; border: 1px solid;
+  }
+  .pf-dur.on { background: rgba(74,160,100,0.12); border-color: rgba(74,160,100,0.3); color: var(--green-lt); }
+  .pf-dur.off { background: transparent; border-color: #1e3528; color: var(--text-dim); }
+
+  .pf-btn {
+    width: 100%; background: #1d3d2b;
+    border: 1px solid #2a5a3e;
+    border-radius: 10px; padding: 10px;
+    font-family: var(--sans); font-size: 12px;
+    font-weight: 500; color: var(--green-lt);
+    text-align: center; cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .pf-ring-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; margin: 10px 0 12px;
+  }
+
+  .pf-ring { position: relative; width: 100px; height: 100px; }
+  .ring-track { fill: none; stroke: #1e2e24; stroke-width: 5; }
+  .ring-prog {
+    fill: none; stroke: var(--green); stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    animation: ringGrow 2s ease forwards 1.2s;
+    transform-origin: center;
+    transform: rotate(-90deg);
+  }
+  @keyframes ringGrow { to { stroke-dashoffset: 105; } }
+
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-time { font-family: var(--serif); font-size: 22px; color: var(--text); font-style: italic; }
+  .ring-lbl { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; }
+
+  .pf-partner {
+    display: flex; align-items: center; gap: 8px;
+    background: #162a1e; border: 1px solid #1e3528;
+    border-radius: 10px; padding: 8px 10px;
+  }
+  .pf-av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #1d3d2b; border: 1px solid #2a5a3e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; color: var(--green-lt);
+    flex-shrink: 0;
+  }
+  .pf-partner-name { font-size: 11px; color: var(--text-md); font-weight: 500; }
+  .pf-partner-sub { font-size: 9px; color: var(--text-dim); }
+
+  .live-badge {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 9px; color: var(--text-dim);
+  }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+
+  /* finish screen */
+  .pf-finish {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0;
+  }
+  .finish-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: rgba(74,160,100,0.1); border: 1px solid rgba(74,160,100,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 10px;
+  }
+  .finish-title { font-family: var(--serif); font-size: 16px; color: var(--text); font-style: italic; margin-bottom: 3px; }
+  .finish-sub { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
+  .finish-stats { display: flex; gap: 6px; width: 100%; }
+  .finish-stat {
+    flex: 1; background: #162a1e; border: 1px solid #1e3528;
+    border-radius: 8px; padding: 7px; text-align: center;
+  }
+  .finish-stat-val { font-size: 16px; font-weight: 500; color: var(--green-lt); }
+  .finish-stat-lbl { font-size: 9px; color: var(--text-dim); }
+
+  /* ─── WHY ─── */
+  .section {
+    position: relative; z-index: 1;
+    max-width: 900px; margin: 0 auto;
+    padding: 5rem 1.5rem;
+  }
+
+  .section-eyebrow {
+    font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-style: italic;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 3rem;
+  }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .why-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+
+  .why-card:hover { border-color: var(--border2); }
+
+  .why-icon {
+    width: 40px; height: 40px;
+    background: rgba(74,160,100,0.1);
+    border: 1px solid rgba(74,160,100,0.2);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 1rem;
+  }
+
+  .why-card h3 {
+    font-size: 15px; font-weight: 500;
+    color: var(--text); margin-bottom: 6px;
+  }
+
+  .why-card p {
+    font-size: 13px; color: var(--text-md); line-height: 1.6;
+  }
+
+  /* problems */
+  .problems {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative; z-index: 1;
+    padding: 5rem 1.5rem;
+  }
+
+  .problems-inner { max-width: 900px; margin: 0 auto; }
+
+  .problem-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 2.5rem;
+  }
+
+  @media (max-width: 600px) {
+    .problem-row { grid-template-columns: 1fr; }
+    .waitlist-form { flex-direction: column; }
+    .mockup-strip { overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start; padding-left: 1.5rem; }
+  }
+
+  .problem-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+  }
+
+  .problem-app {
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+
+  .problem-app::before {
+    content: '✗';
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    background: rgba(220,80,60,0.12);
+    border-radius: 50%;
+    font-size: 9px; color: #e05a48;
+  }
+
+  .problem-text {
+    font-size: 13px; color: var(--text-md); line-height: 1.55;
+    font-style: italic;
+  }
+
+  .solution-card {
+    background: rgba(74,160,100,0.06);
+    border: 1px solid rgba(74,160,100,0.2);
+    border-radius: 14px;
+    padding: 1.25rem;
+    grid-column: 1 / -1;
+  }
+
+  .solution-label {
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--green-lt);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+
+  .solution-label::before {
+    content: '✓';
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    background: rgba(74,160,100,0.15);
+    border-radius: 50%;
+    font-size: 9px; color: var(--green-lt);
+  }
+
+  .solution-text {
+    font-size: 14px; color: var(--text-md); line-height: 1.6;
+  }
+
+  /* how it works */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 2.5rem;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 19px; top: 20px; bottom: 20px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .step {
+    display: flex; gap: 1.5rem; align-items: flex-start;
+    padding: 1.5rem 0;
+  }
+
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500; color: var(--green-lt);
+    flex-shrink: 0; z-index: 1;
+  }
+
+  .step-content h3 { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .step-content p { font-size: 13px; color: var(--text-md); line-height: 1.6; }
+
+  /* pricing */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .pricing-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2rem 1.5rem;
+  }
+
+  .pricing-card.featured {
+    border-color: rgba(74,160,100,0.4);
+    background: rgba(74,160,100,0.05);
+    position: relative;
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--green);
+    color: #0c1810;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 14px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  .pricing-plan { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; }
+  .pricing-price { font-family: var(--serif); font-size: 2.5rem; font-style: italic; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .pricing-period { font-size: 13px; color: var(--text-dim); margin-bottom: 1.5rem; }
+
+  .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+  .pricing-features li { font-size: 13px; color: var(--text-md); display: flex; align-items: center; gap: 8px; }
+  .pricing-features li::before { content: '—'; color: var(--green-dim); font-weight: 500; }
+
+  .pricing-cta {
+    width: 100%; padding: 12px;
+    border-radius: 12px;
+    font-family: var(--sans); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+
+  .pricing-cta.main {
+    background: var(--green); border: none; color: #0c1810;
+  }
+  .pricing-cta.main:hover { background: var(--green-lt); }
+  .pricing-cta.ghost {
+    background: transparent; border: 1px solid var(--border2); color: var(--text-md);
+  }
+  .pricing-cta.ghost:hover { border-color: var(--green-dim); color: var(--text); }
+
+  /* footer */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--text-md);
+  }
+
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text-md); }
+
+  .footer-copy { font-size: 12px; color: var(--text-dim); }
+
+  /* success toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--card);
+    border: 1px solid rgba(74,160,100,0.3);
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 14px; color: var(--green-lt);
+    z-index: 200;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .divider-line {
+    position: relative; z-index: 1;
+    height: 1px; background: var(--border);
+    max-width: 900px; margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-icon">⚓</div>
+    Presens
+  </a>
+  <div class="nav-lang">
+    <button class="lang-btn active" onclick="setLang('es')">🇪🇸 ES</button>
+    <button class="lang-btn" onclick="setLang('en')">🇬🇧 EN</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="pulse-dot"></div>
+    <span data-es="Próximamente en Android" data-en="Coming soon to Android">Próximamente en Android</span>
+  </div>
+
+  <h1 class="hero-title" data-es="Trabaja acompañado.<br><em>En silencio.</em>" data-en="Work together.<br><em>In silence.</em>">
+    Trabaja acompañado.<br><em>En silencio.</em>
+  </h1>
+
+  <p class="hero-sub" data-es="Presens empareja personas para trabajar en videollamada silenciosa. Sin charla. Sin distracción. Solo presencia — el truco que usan las personas con TDAH desde siempre." data-en="Presens pairs people to work together on a silent video call. No chat. No distraction. Just presence — the trick people with ADHD have always used.">
+    Presens empareja personas para trabajar en videollamada silenciosa. Sin charla. Sin distracción. Solo presencia — el truco que usan las personas con TDAH desde siempre.
+  </p>
+
+  <form class="waitlist-form" onsubmit="joinWaitlist(event)">
+    <input class="waitlist-input" type="email" id="email-input"
+      data-placeholder-es="tu@email.com"
+      data-placeholder-en="your@email.com"
+      placeholder="tu@email.com" required />
+    <button class="waitlist-btn" type="submit" data-es="Apúntame" data-en="Join waitlist">Apúntame</button>
+  </form>
+
+  <p class="hero-note" data-es="Sin spam. Solo un aviso cuando esté lista." data-en="No spam. Just a heads up when it's ready.">
+    Sin spam. Solo un aviso cuando esté lista.
+  </p>
+
+  <div class="counter">
+    <strong id="counter-num">47</strong>
+    <span data-es="personas ya en lista" data-en="people already waiting">personas ya en lista</span>
+  </div>
+</section>
+
+<!-- MOCKUP STRIP -->
+<div class="mockup-strip">
+  <!-- screen 1: nueva sesión -->
+  <div class="phone-frame" id="pf1">
+    <div class="pf-label" data-es="Nueva sesión" data-en="New session">Nueva sesión</div>
+    <div class="pf-title" data-es="¿Cuánto tiempo?" data-en="How long?">¿Cuánto tiempo?</div>
+    <div class="pf-dur-row">
+      <div class="pf-dur off">25</div>
+      <div class="pf-dur on">50</div>
+      <div class="pf-dur off">75</div>
+    </div>
+    <div class="pf-card">
+      <div class="pf-card-label" data-es="Tu objetivo" data-en="Your goal">Tu objetivo</div>
+      <div class="pf-card-val" data-es="Terminar el diseño…" data-en="Finish the design…">Terminar el diseño…</div>
+    </div>
+    <div class="pf-card">
+      <div class="pf-card-label" data-es="Idioma" data-en="Language">Idioma</div>
+      <div class="pf-card-val">🇪🇸 Español</div>
+    </div>
+    <div class="pf-btn" data-es="Buscar compañero" data-en="Find a partner">Buscar compañero</div>
+  </div>
+
+  <!-- screen 2: sesión en curso -->
+  <div class="phone-frame" id="pf2">
+    <div class="pf-label" data-es="En sesión" data-en="In session">En sesión</div>
+    <div class="pf-ring-wrap">
+      <div class="pf-ring">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle class="ring-track" cx="50" cy="50" r="45"/>
+          <circle class="ring-prog" cx="50" cy="50" r="45"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-time">31:42</div>
+          <div class="ring-lbl" data-es="restante" data-en="left">restante</div>
+        </div>
+      </div>
+    </div>
+    <div class="pf-partner">
+      <div class="pf-av">MG</div>
+      <div>
+        <div class="pf-partner-name">María G.</div>
+        <div class="pf-partner-sub" data-es="Respondiendo emails" data-en="Answering emails">Respondiendo emails</div>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div> <span data-es="vivo" data-en="live">vivo</span></div>
+    </div>
+  </div>
+
+  <!-- screen 3: fin de sesión -->
+  <div class="phone-frame" id="pf3">
+    <div class="pf-label" data-es="Completada" data-en="Completed">Completada</div>
+    <div class="pf-finish">
+      <div class="finish-icon">✓</div>
+      <div class="finish-title" data-es="¡Lo lograste!" data-en="You did it!">¡Lo lograste!</div>
+      <div class="finish-sub" data-es="50 minutos de foco puro" data-en="50 minutes of pure focus">50 minutos de foco puro</div>
+      <div class="finish-stats">
+        <div class="finish-stat">
+          <div class="finish-stat-val">50</div>
+          <div class="finish-stat-lbl" data-es="min hoy" data-en="min today">min hoy</div>
+        </div>
+        <div class="finish-stat">
+          <div class="finish-stat-val">9</div>
+          <div class="finish-stat-lbl" data-es="días racha" data-en="day streak">días racha</div>
+        </div>
+        <div class="finish-stat">
+          <div class="finish-stat-val">23</div>
+          <div class="finish-stat-lbl" data-es="sesiones" data-en="sessions">sesiones</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEMS -->
+<div class="problems">
+  <div class="problems-inner">
+    <div class="section-eyebrow" data-es="Por qué Presens" data-en="Why Presens">Por qué Presens</div>
+    <h2 class="section-title" data-es="Las alternativas tienen<br>un problema." data-en="The alternatives have<br>a problem.">Las alternativas tienen<br>un problema.</h2>
+    <div class="problem-row">
+      <div class="problem-card">
+        <div class="problem-app">Focusmate</div>
+        <div class="problem-text" data-es="Solo web. Solo en inglés. El 30% de los emparejamientos no aparecen y no pasa nada." data-en="Web only. English only. 30% of matches don't show up and nothing happens.">Solo web. Solo en inglés. El 30% de los emparejamientos no aparecen y no pasa nada.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-app">Dubbii</div>
+        <div class="problem-text" data-es="Los hosts no paran de hablar durante las sesiones de 'silencio'. Hiperdistractivo para alguien con TDAH." data-en="Hosts keep talking during 'silent' sessions. Hyper-distracting for someone with ADHD.">Los hosts no paran de hablar durante las sesiones de 'silencio'. Hiperdistractivo para alguien con TDAH.</div>
+      </div>
+      <div class="solution-card">
+        <div class="solution-label" data-es="Presens lo resuelve" data-en="Presens solves it">Presens lo resuelve</div>
+        <div class="solution-text" data-es="App nativa Android. Español e inglés. Silencio por defecto. Sistema de reputación para no-shows. Matching en segundos por idioma y zona horaria." data-en="Native Android app. Spanish and English. Silent by default. Reputation system for no-shows. Matching in seconds by language and timezone.">App nativa Android. Español e inglés. Silencio por defecto. Sistema de reputación para no-shows. Matching en segundos por idioma y zona horaria.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="section-eyebrow" data-es="Cómo funciona" data-en="How it works">Cómo funciona</div>
+  <h2 class="section-title" data-es="Tres pasos.<br>Nada más." data-en="Three steps.<br>Nothing more.">Tres pasos.<br>Nada más.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3 data-es="Di lo que vas a hacer" data-en="Say what you're going to do">Di lo que vas a hacer</h3>
+        <p data-es="Escribe tu objetivo para la sesión — una frase corta. Ese compromiso ya activa tu cerebro." data-en="Write your goal for the session — one short sentence. That commitment already activates your brain.">Escribe tu objetivo para la sesión — una frase corta. Ese compromiso ya activa tu cerebro.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3 data-es="Presens te empareja en segundos" data-en="Presens matches you in seconds">Presens te empareja en segundos</h3>
+        <p data-es="Alguien disponible en tu idioma aparece en pantalla. Cámara encendida. Silencio. Cada uno a lo suyo." data-en="Someone available in your language appears on screen. Camera on. Silence. Each to their own work.">Alguien disponible en tu idioma aparece en pantalla. Cámara encendida. Silencio. Cada uno a lo suyo.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3 data-es="Termina la sesión y celebra" data-en="Finish the session and celebrate">Termina la sesión y celebra</h3>
+        <p data-es="Al acabar, confirmáis si cumplisteis vuestros objetivos. Un gesto simple que cierra el bucle dopaminérgico." data-en="When done, you both confirm if you met your goals. A simple gesture that closes the dopamine loop.">Al acabar, confirmáis si cumplisteis vuestros objetivos. Un gesto simple que cierra el bucle dopaminérgico.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY IT WORKS -->
+<div class="divider-line"></div>
+<section class="section">
+  <div class="section-eyebrow" data-es="La ciencia detrás" data-en="The science behind it">La ciencia detrás</div>
+  <h2 class="section-title" data-es="Tu cerebro funciona<br>mejor acompañado." data-en="Your brain works<br>better with company.">Tu cerebro funciona<br>mejor acompañado.</h2>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">⚓</div>
+      <h3 data-es="Body doubling" data-en="Body doubling">Body doubling</h3>
+      <p data-es="Tener a alguien presente — aunque sea en silencio — ancla tu atención al momento actual. Es una técnica validada para TDAH." data-en="Having someone present — even in silence — anchors your attention to the present moment. A validated ADHD technique.">Tener a alguien presente — aunque sea en silencio — ancla tu atención al momento actual. Es una técnica validada para TDAH.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🎯</div>
+      <h3 data-es="Compromiso público" data-en="Public commitment">Compromiso público</h3>
+      <p data-es="Decirle a alguien qué vas a hacer activa un mecanismo de responsabilidad. Aunque sea un desconocido." data-en="Telling someone what you're going to do activates an accountability mechanism. Even if they're a stranger.">Decirle a alguien qué vas a hacer activa un mecanismo de responsabilidad. Aunque sea un desconocido.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔇</div>
+      <h3 data-es="Sin estimulación extra" data-en="No extra stimulation">Sin estimulación extra</h3>
+      <p data-es="El silencio no es ausencia — es estructura. Tu cerebro puede enfocarse sin procesar conversación al mismo tiempo." data-en="Silence isn't absence — it's structure. Your brain can focus without processing conversation at the same time.">El silencio no es ausencia — es estructura. Tu cerebro puede enfocarse sin procesar conversación al mismo tiempo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<div class="divider-line"></div>
+<section class="section">
+  <div class="section-eyebrow" data-es="Precio" data-en="Pricing">Precio</div>
+  <h2 class="section-title" data-es="Empieza gratis.<br>Paga cuando funcione." data-en="Start free.<br>Pay when it works.">Empieza gratis.<br>Paga cuando funcione.</h2>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-plan" data-es="Gratis" data-en="Free">Gratis</div>
+      <div class="pricing-price">0€</div>
+      <div class="pricing-period" data-es="para siempre" data-en="forever">para siempre</div>
+      <ul class="pricing-features">
+        <li data-es="3 sesiones por semana" data-en="3 sessions per week">3 sesiones por semana</li>
+        <li data-es="25 o 50 minutos" data-en="25 or 50 minutes">25 o 50 minutos</li>
+        <li data-es="Español e inglés" data-en="Spanish and English">Español e inglés</li>
+        <li data-es="Historial básico" data-en="Basic history">Historial básico</li>
+      </ul>
+      <button class="pricing-cta ghost" onclick="document.getElementById('email-input').focus()" data-es="Apúntate a la lista" data-en="Join the waitlist">Apúntate a la lista</button>
+    </div>
+    <div class="pricing-card featured">
+      <div class="featured-badge" data-es="Recomendado" data-en="Recommended">Recomendado</div>
+      <div class="pricing-plan" data-es="Premium" data-en="Premium">Premium</div>
+      <div class="pricing-price">4,99€</div>
+      <div class="pricing-period" data-es="al mes" data-en="per month">al mes</div>
+      <ul class="pricing-features">
+        <li data-es="Sesiones ilimitadas" data-en="Unlimited sessions">Sesiones ilimitadas</li>
+        <li data-es="25, 50 y 75 minutos" data-en="25, 50 and 75 minutes">25, 50 y 75 minutos</li>
+        <li data-es="Filtro por género" data-en="Gender filter">Filtro por género</li>
+        <li data-es="Racha y estadísticas" data-en="Streak and stats">Racha y estadísticas</li>
+        <li data-es="Prioridad en matching" data-en="Matching priority">Prioridad en matching</li>
+        <li data-es="Sin anuncios nunca" data-en="No ads ever">Sin anuncios nunca</li>
+      </ul>
+      <button class="pricing-cta main" onclick="document.getElementById('email-input').focus()" data-es="Apúntate — precio de lanzamiento" data-en="Join — launch price">Apúntate — precio de lanzamiento</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Presens</div>
+  <div class="footer-links">
+    <a href="#" data-es="Privacidad" data-en="Privacy">Privacidad</a>
+    <a href="#" data-es="Contacto" data-en="Contact">Contacto</a>
+    <a href="https://twitter.com/presens_app" target="_blank">Twitter / X</a>
+  </div>
+  <div class="footer-copy">© 2025 Presens</div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast" data-es="¡Apuntado! Te avisamos cuando esté lista 🌿" data-en="You're in! We'll let you know when it's ready 🌿">
+  ¡Apuntado! Te avisamos cuando esté lista 🌿
+</div>
+
+<script>
+  // ─── scroll reveal for phone frames ───
+  const frames = document.querySelectorAll('.phone-frame');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.2 });
+  frames.forEach(f => obs.observe(f));
+
+  // ─── waitlist ───
+  function joinWaitlist(e) {
+    e.preventDefault();
+    const toast = document.getElementById('toast');
+    const counter = document.getElementById('counter-num');
+    counter.textContent = parseInt(counter.textContent) + 1;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+    document.getElementById('email-input').value = '';
+  }
+
+  // ─── language switch ───
+  let currentLang = 'es';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+    document.querySelectorAll('[data-es]').forEach(el => {
+      const txt = el.getAttribute(`data-${lang}`);
+      if (!txt) return;
+      if (el.tagName === 'INPUT') {
+        el.placeholder = el.getAttribute(`data-placeholder-${lang}`) || txt;
+      } else if (el.tagName === 'BUTTON' || el.tagName === 'DIV' || el.tagName === 'P' || el.tagName === 'SPAN' || el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || el.tagName === 'LI' || el.tagName === 'A') {
+        el.innerHTML = txt;
+      }
+    });
+
+    // toast text
+    const toast = document.getElementById('toast');
+    toast.textContent = toast.getAttribute(`data-${lang}`);
+  }
+</script>
+</body>
+</html>
